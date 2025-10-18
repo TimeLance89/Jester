@@ -22,23 +22,42 @@ class EmployeePlannerServerGUI:
         self.root.title("Employee Planner Server Manager")
         self.root.geometry("800x900")
         self.root.minsize(700, 500)
-        
+
+        # Grundfarben & Layout
+        self.colors = {
+            'background': '#eef2ff',
+            'surface': '#ffffff',
+            'primary': '#2563eb',
+            'primary_hover': '#1d4ed8',
+            'primary_active': '#1e40af',
+            'success': '#16a34a',
+            'success_hover': '#15803d',
+            'success_active': '#166534',
+            'danger': '#dc2626',
+            'danger_hover': '#b91c1c',
+            'danger_active': '#991b1b',
+            'warning': '#d97706',
+            'warning_hover': '#b45309',
+            'warning_active': '#92400e',
+            'secondary': '#475569',
+            'secondary_hover': '#334155',
+            'secondary_active': '#1e293b',
+            'text': '#0f172a',
+            'text_muted': '#64748b',
+            'border': '#e2e8f0',
+            'disabled_bg': '#e2e8f0',
+            'disabled_fg': '#94a3b8',
+            'log_bg': '#0f172a',
+            'log_fg': '#e2e8f0'
+        }
+
+        self.root.configure(bg=self.colors['background'])
+
         # Server-Prozess
         self.server_process = None
         self.server_running = False
         self.server_url = "http://localhost:5001"
-        
-        # Farben und Styling
-        self.colors = {
-            'primary': '#2563eb',
-            'success': '#059669',
-            'danger': '#dc2626',
-            'warning': '#d97706',
-            'secondary': '#6b7280',
-            'light': '#f8fafc',
-            'dark': '#1e293b'
-        }
-        
+
         self.setup_styles()
         self.create_widgets()
         self.update_status()
@@ -52,39 +71,117 @@ class EmployeePlannerServerGUI:
     def setup_styles(self):
         """Konfiguriert moderne Styles für ttk Widgets"""
         style = ttk.Style()
-        
+
+        # Modernes Theme nutzen
+        try:
+            style.theme_use('clam')
+        except tk.TclError:
+            pass
+
+        style.configure('.', font=('Segoe UI', 10))
+        style.configure('Background.TFrame', background=self.colors['background'])
+        style.configure('Surface.TFrame', background=self.colors['surface'], borderwidth=0)
+        style.configure('Card.TFrame', background=self.colors['surface'])
+        try:
+            style.configure('Card.TLabelframe',
+                            background=self.colors['surface'],
+                            borderwidth=1,
+                            relief='solid',
+                            bordercolor=self.colors['border'],
+                            darkcolor=self.colors['border'],
+                            lightcolor=self.colors['border'])
+        except tk.TclError:
+            style.configure('Card.TLabelframe',
+                            background=self.colors['surface'],
+                            borderwidth=1,
+                            relief='solid')
+        style.configure('Card.TLabelframe.Label',
+                        background=self.colors['surface'],
+                        foreground=self.colors['text_muted'],
+                        font=('Segoe UI', 10, 'bold'))
+        style.configure('TLabel',
+                        background=self.colors['surface'],
+                        foreground=self.colors['text'])
+        style.configure('Muted.TLabel',
+                        background=self.colors['surface'],
+                        foreground=self.colors['text_muted'])
+        style.configure('Background.TLabel',
+                        background=self.colors['background'],
+                        foreground=self.colors['text'])
+        style.configure('Footer.TLabel',
+                        background=self.colors['surface'],
+                        foreground=self.colors['text_muted'])
+        style.configure('Title.TLabel',
+                        background=self.colors['surface'],
+                        foreground=self.colors['text'])
+        style.configure('Link.TLabel',
+                        background=self.colors['surface'],
+                        foreground=self.colors['primary'])
+
         # Moderne Button-Styles
-        style.configure('Primary.TButton', 
-                       background=self.colors['primary'],
-                       foreground='white',
-                       padding=(20, 10),
-                       font=('Segoe UI', 10, 'bold'))
-        
+        button_padding = (20, 10)
+        button_font = ('Segoe UI', 10, 'bold')
+
+        style.configure('Primary.TButton',
+                        background=self.colors['primary'],
+                        foreground='white',
+                        padding=button_padding,
+                        font=button_font)
         style.configure('Success.TButton',
-                       background=self.colors['success'],
-                       foreground='white',
-                       padding=(20, 10),
-                       font=('Segoe UI', 10, 'bold'))
-        
+                        background=self.colors['success'],
+                        foreground='white',
+                        padding=button_padding,
+                        font=button_font)
         style.configure('Danger.TButton',
-                       background=self.colors['danger'],
-                       foreground='white',
-                       padding=(20, 10),
-                       font=('Segoe UI', 10, 'bold'))
-        
+                        background=self.colors['danger'],
+                        foreground='white',
+                        padding=button_padding,
+                        font=button_font)
         style.configure('Warning.TButton',
-                       background=self.colors['warning'],
-                       foreground='white',
-                       padding=(20, 10),
-                       font=('Segoe UI', 10, 'bold'))
-    
+                        background=self.colors['warning'],
+                        foreground='white',
+                        padding=button_padding,
+                        font=button_font)
+        style.configure('Secondary.TButton',
+                        background=self.colors['secondary'],
+                        foreground='white',
+                        padding=button_padding,
+                        font=button_font)
+
+        # Konsistente Farben für verschiedene Button-Zustände
+        style.map('Primary.TButton',
+                  background=[('disabled', self.colors['disabled_bg']),
+                              ('pressed', self.colors['primary_active']),
+                              ('active', self.colors['primary_hover'])],
+                  foreground=[('disabled', self.colors['disabled_fg'])])
+        style.map('Success.TButton',
+                  background=[('disabled', self.colors['disabled_bg']),
+                              ('pressed', self.colors['success_active']),
+                              ('active', self.colors['success_hover'])],
+                  foreground=[('disabled', self.colors['disabled_fg'])])
+        style.map('Danger.TButton',
+                  background=[('disabled', self.colors['disabled_bg']),
+                              ('pressed', self.colors['danger_active']),
+                              ('active', self.colors['danger_hover'])],
+                  foreground=[('disabled', self.colors['disabled_fg'])])
+        style.map('Warning.TButton',
+                  background=[('disabled', self.colors['disabled_bg']),
+                              ('pressed', self.colors['warning_active']),
+                              ('active', self.colors['warning_hover'])],
+                  foreground=[('disabled', self.colors['disabled_fg'])])
+        style.map('Secondary.TButton',
+                  background=[('disabled', self.colors['disabled_bg']),
+                              ('pressed', self.colors['secondary_active']),
+                              ('active', self.colors['secondary_hover'])],
+                  foreground=[('disabled', self.colors['disabled_fg'])])
+
     def create_widgets(self):
         """Erstellt die Benutzeroberfläche"""
-        
+
         # Hauptcontainer mit Padding
-        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame = ttk.Frame(self.root, padding="20", style='Surface.TFrame')
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         # Header
         self.create_header(main_frame)
         
@@ -111,67 +208,75 @@ class EmployeePlannerServerGUI:
     
     def create_header(self, parent):
         """Erstellt den Header-Bereich"""
-        header_frame = ttk.Frame(parent)
+        header_frame = ttk.Frame(parent, style='Surface.TFrame')
         header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
-        
+
         # Titel
-        title_label = ttk.Label(header_frame, 
-                               text="🏢 Employee Planner Server Manager",
-                               font=('Segoe UI', 18, 'bold'))
+        title_label = ttk.Label(header_frame,
+                                text="🏢 Employee Planner Server Manager",
+                                style='Title.TLabel',
+                                font=('Segoe UI', 18, 'bold'))
         title_label.grid(row=0, column=0, sticky=tk.W)
-        
+
         # Untertitel
         subtitle_label = ttk.Label(header_frame,
                                   text="Moderne Verwaltung für Ihren Dienstplan-Server",
                                   font=('Segoe UI', 10),
-                                  foreground=self.colors['secondary'])
+                                  style='Muted.TLabel')
         subtitle_label.grid(row=1, column=0, sticky=tk.W, pady=(5, 0))
-    
+
     def create_status_section(self, parent):
         """Erstellt den Status-Bereich"""
-        status_frame = ttk.LabelFrame(parent, text="📊 Server Status", padding="15")
+        status_frame = ttk.LabelFrame(parent,
+                                      text="📊 Server Status",
+                                      padding="15",
+                                      style='Card.TLabelframe')
         status_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
-        
+
         # Status-Indikator
-        status_container = ttk.Frame(status_frame)
+        status_container = ttk.Frame(status_frame, style='Card.TFrame')
         status_container.grid(row=0, column=0, sticky=(tk.W, tk.E))
-        
+
         self.status_indicator = tk.Label(status_container,
-                                        text="●",
-                                        font=('Segoe UI', 20),
-                                        fg=self.colors['danger'])
+                                         text="●",
+                                         font=('Segoe UI', 20),
+                                         fg=self.colors['danger'],
+                                         bg=self.colors['surface'])
         self.status_indicator.grid(row=0, column=0, padx=(0, 10))
         
         self.status_label = ttk.Label(status_container,
                                      text="Server gestoppt",
                                      font=('Segoe UI', 12, 'bold'))
         self.status_label.grid(row=0, column=1)
-        
+
         # Server-URL
         self.url_label = ttk.Label(status_frame,
                                   text=f"URL: {self.server_url}",
                                   font=('Segoe UI', 10),
-                                  foreground=self.colors['secondary'])
+                                  style='Muted.TLabel')
         self.url_label.grid(row=1, column=0, sticky=tk.W, pady=(10, 0))
-        
+
         # Netzwerk-Info
         self.network_label = ttk.Label(status_frame,
                                       text="Netzwerk: Nicht verfügbar",
                                       font=('Segoe UI', 10),
-                                      foreground=self.colors['secondary'])
+                                      style='Muted.TLabel')
         self.network_label.grid(row=2, column=0, sticky=tk.W, pady=(5, 0))
-        
+
         status_frame.columnconfigure(0, weight=1)
-    
+
     def create_control_section(self, parent):
         """Erstellt die Control-Buttons"""
-        control_frame = ttk.LabelFrame(parent, text="🎮 Server Steuerung", padding="15")
+        control_frame = ttk.LabelFrame(parent,
+                                       text="🎮 Server Steuerung",
+                                       padding="15",
+                                       style='Card.TLabelframe')
         control_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
-        
+
         # Button-Container
-        button_frame = ttk.Frame(control_frame)
+        button_frame = ttk.Frame(control_frame, style='Card.TFrame')
         button_frame.grid(row=0, column=0, sticky=(tk.W, tk.E))
-        
+
         # Start Button
         self.start_button = ttk.Button(button_frame,
                                       text="🚀 Server starten",
@@ -205,16 +310,19 @@ class EmployeePlannerServerGUI:
         
         button_frame.columnconfigure((0, 1, 2, 3), weight=1)
         control_frame.columnconfigure(0, weight=1)
-    
+
     def create_info_section(self, parent):
         """Erstellt den Info-Bereich"""
-        info_frame = ttk.LabelFrame(parent, text="ℹ️ Server Information", padding="15")
+        info_frame = ttk.LabelFrame(parent,
+                                    text="ℹ️ Server Information",
+                                    padding="15",
+                                    style='Card.TLabelframe')
         info_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
-        
+
         # Info-Grid
-        info_container = ttk.Frame(info_frame)
+        info_container = ttk.Frame(info_frame, style='Card.TFrame')
         info_container.grid(row=0, column=0, sticky=(tk.W, tk.E))
-        
+
         # Port
         ttk.Label(info_container, text="Port:", font=('Segoe UI', 10, 'bold')).grid(row=0, column=0, sticky=tk.W)
         ttk.Label(info_container, text="5001", font=('Segoe UI', 10)).grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
@@ -231,58 +339,67 @@ class EmployeePlannerServerGUI:
         # Netzwerk-URL
         network_url = f"http://{local_ip}:5001"
         ttk.Label(info_container, text="Netzwerk-URL:", font=('Segoe UI', 10, 'bold')).grid(row=1, column=2, sticky=tk.W, padx=(30, 0), pady=(10, 0))
-        self.network_url_label = ttk.Label(info_container, text=network_url, font=('Segoe UI', 10), foreground=self.colors['primary'])
+        self.network_url_label = ttk.Label(info_container,
+                                           text=network_url,
+                                           font=('Segoe UI', 10),
+                                           style='Link.TLabel')
         self.network_url_label.grid(row=1, column=3, sticky=tk.W, padx=(10, 0), pady=(10, 0))
-        
+
         info_frame.columnconfigure(0, weight=1)
-    
+
     def create_log_section(self, parent):
         """Erstellt den Log-Bereich"""
-        log_frame = ttk.LabelFrame(parent, text="📋 Server Logs", padding="15")
+        log_frame = ttk.LabelFrame(parent,
+                                   text="📋 Server Logs",
+                                   padding="15",
+                                   style='Card.TLabelframe')
         log_frame.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 15))
-        
+
         # Log-Text mit Scrollbar
         self.log_text = scrolledtext.ScrolledText(log_frame,
                                                  height=12,
                                                  font=('Consolas', 9),
-                                                 bg='#1e1e1e',
-                                                 fg='#ffffff',
-                                                 insertbackground='white')
+                                                 bg=self.colors['log_bg'],
+                                                 fg=self.colors['log_fg'],
+                                                 insertbackground=self.colors['log_fg'],
+                                                 borderwidth=0,
+                                                 relief='flat')
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
+
         # Clear Log Button
         clear_button = ttk.Button(log_frame,
-                                 text="🗑️ Logs löschen",
-                                 command=self.clear_logs)
+                                  text="🗑️ Logs löschen",
+                                  command=self.clear_logs,
+                                  style='Secondary.TButton')
         clear_button.grid(row=1, column=0, sticky=tk.E, pady=(10, 0))
-        
+
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
-        
+
         # Willkommensnachricht
         self.log("🎉 Employee Planner Server Manager gestartet")
         self.log(f"📍 Arbeitsverzeichnis: {os.getcwd()}")
     
     def create_footer(self, parent):
         """Erstellt den Footer"""
-        footer_frame = ttk.Frame(parent)
+        footer_frame = ttk.Frame(parent, style='Surface.TFrame')
         footer_frame.grid(row=5, column=0, sticky=(tk.W, tk.E))
-        
+
         footer_label = ttk.Label(footer_frame,
                                 text="Employee Planner Server Manager v1.0 | (C) Steffen Ruh",
                                 font=('Segoe UI', 8),
-                                foreground=self.colors['secondary'])
+                                style='Footer.TLabel')
         footer_label.grid(row=0, column=0)
-        
+
         # Zeit-Label
         self.time_label = ttk.Label(footer_frame,
                                    text="",
                                    font=('Segoe UI', 8),
-                                   foreground=self.colors['secondary'])
+                                   style='Footer.TLabel')
         self.time_label.grid(row=0, column=1, sticky=tk.E)
-        
+
         footer_frame.columnconfigure(1, weight=1)
-        
+
         # Zeit aktualisieren
         self.update_time()
     
@@ -318,10 +435,14 @@ class EmployeePlannerServerGUI:
         """Startet den Flask-Server"""
         if self.server_running:
             return
-        
+
         try:
             self.log("🚀 Starte Employee Planner Server...")
-            
+            self.start_button.config(state='disabled')
+            self.restart_button.config(state='disabled')
+            self.stop_button.config(state='disabled')
+            self.browser_button.config(state='disabled')
+
             # Server in separatem Thread starten
             def run_server():
                 try:
@@ -359,6 +480,7 @@ class EmployeePlannerServerGUI:
         except Exception as e:
             self.log(f"❌ Fehler beim Starten: {e}")
             messagebox.showerror("Fehler", f"Server konnte nicht gestartet werden:\n{e}")
+            self.update_button_states()
     
     def check_server_ready(self):
         """Überprüft ob der Server bereit ist"""
@@ -378,45 +500,52 @@ class EmployeePlannerServerGUI:
     
     def stop_server(self):
         """Stoppt den Flask-Server"""
-        if not self.server_running:
+        if not self.server_running and not self.server_process:
             return
-        
+
         try:
             self.log("⏹️ Stoppe Employee Planner Server...")
-            
-            if self.server_process:
+
+            process = self.server_process
+            if process:
                 # Versuche zuerst graceful shutdown
-                self.server_process.terminate()
-                
+                process.terminate()
+
                 try:
                     # Warte auf Prozess-Ende
-                    self.server_process.wait(timeout=5)
+                    process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     # Falls terminate nicht funktioniert, kill verwenden
                     self.log("⚠️ Server reagiert nicht, erzwinge Beendigung...")
-                    self.server_process.kill()
-                    self.server_process.wait()
-                
+                    process.kill()
+                    process.wait()
+
                 # Auf Windows: Töte auch alle Kind-Prozesse (Flask Reloader)
                 if sys.platform == 'win32':
                     try:
                         import psutil
-                        parent = psutil.Process(self.server_process.pid)
+                        parent = psutil.Process(process.pid)
                         for child in parent.children(recursive=True):
                             child.kill()
                     except:
                         pass  # psutil nicht verfügbar oder Prozess bereits beendet
-                
+
+                if process.stdout:
+                    try:
+                        process.stdout.close()
+                    except Exception:
+                        pass
+
                 self.server_process = None
-            
+
             self.server_running = False
             self.log("✅ Server erfolgreich gestoppt")
             self.update_button_states()
-            
+
         except Exception as e:
             self.log(f"❌ Fehler beim Stoppen: {e}")
             messagebox.showerror("Fehler", f"Server konnte nicht gestoppt werden:\n{e}")
-    
+
     def restart_server(self):
         """Startet den Server neu"""
         self.log("🔄 Starte Server neu...")
@@ -469,7 +598,7 @@ class EmployeePlannerServerGUI:
     
     def on_closing(self):
         """Wird beim Schließen des Fensters aufgerufen"""
-        if self.server_running:
+        if self.server_running or self.server_process:
             # Server automatisch stoppen ohne Nachfrage
             self.log("🔴 GUI wird geschlossen, stoppe Server...")
             self.stop_server()
