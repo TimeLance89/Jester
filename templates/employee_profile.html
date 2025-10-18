@@ -1,314 +1,266 @@
 {% extends "layout.html" %}
 {% block title %}Profil: {{ emp.name }} - Dienstplaner{% endblock %}
 {% block content %}
-<div style="margin-bottom: 2rem;">
-  <h1 style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-    <span style="margin-right: 0.75rem; font-size: 2rem;">👤</span>
-    Profil von {{ emp.name }}
-  </h1>
-  <p style="color: #64748b; font-size: 1.125rem; margin: 0;">Detailansicht und Übersicht der Mitarbeiterdaten</p>
-</div>
+<div class="profile-wrapper">
+  <section class="profile-hero animate-fade-up">
+    <div class="profile-hero-content">
+      <div class="profile-avatar" aria-hidden="true">
+        <span>{{ (emp.name or '?')[:1] | upper }}</span>
+      </div>
+      <div>
+        <p class="profile-breadcrumb">Mitarbeiter · Profil</p>
+        <h1 class="profile-title">{{ emp.name }}</h1>
+        <div class="profile-meta">
+          <span class="profile-meta-item">
+            <span class="profile-meta-icon">💼</span>
+            {{ emp.position or 'Position unbekannt' }}
+          </span>
+          <span class="profile-meta-divider" aria-hidden="true">•</span>
+          <span class="profile-meta-item">
+            <span class="profile-meta-icon">🏢</span>
+            {% if emp.department %}
+              {{ emp.department.name }}
+            {% else %}
+              Keine Abteilung
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="profile-hero-stats">
+      <div class="profile-stat animate-fade-up delay-1">
+        <div class="profile-stat-icon profile-stat-icon-primary">⏱️</div>
+        <div class="profile-stat-value">{{ emp.monthly_hours or '—' }}</div>
+        <div class="profile-stat-label">Monatliche Stunden</div>
+      </div>
+      <div class="profile-stat animate-fade-up delay-2">
+        <div class="profile-stat-icon profile-stat-icon-success">📅</div>
+        <div class="profile-stat-value">{{ shifts|length }}</div>
+        <div class="profile-stat-label">Schichten diese Woche</div>
+      </div>
+      <div class="profile-stat animate-fade-up delay-3">
+        <div class="profile-stat-icon profile-stat-icon-warning">🏖️</div>
+        <div class="profile-stat-value">{{ leaves|length }}</div>
+        <div class="profile-stat-label">Abwesenheiten</div>
+      </div>
+    </div>
+  </section>
 
-<!-- Mitarbeiter-Informationen -->
-<div class="card" style="margin-bottom: 2rem; border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-  <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 2rem;">
-    <h3 style="margin: 0; display: flex; align-items: center; font-size: 1.5rem; font-weight: 600;">
-      <span style="margin-right: 0.75rem; font-size: 2rem;">📋</span>
-      Persönliche Informationen
-    </h3>
-    <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1rem;">Übersicht der Mitarbeiterdaten und Kontaktinformationen</p>
-  </div>
-  <div class="card-body" style="padding: 2rem;">
-    
-    <!-- Hauptinformationen in Karten-Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-      
-      <!-- Grunddaten Karte -->
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem;">
-        <h4 style="color: #374151; margin-bottom: 1.5rem; display: flex; align-items: center; font-size: 1.125rem; font-weight: 600;">
-          <span style="margin-right: 0.5rem; font-size: 1.25rem;">📝</span>Grunddaten
-        </h4>
-        
-        <div style="space-y: 1.25rem;">
-          <!-- Name -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">👤</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Name</label>
-            </div>
-            <p style="font-size: 1.25rem; font-weight: 600; color: #1e293b; margin: 0; padding: 0.5rem 0;">{{ emp.name }}</p>
+  <section class="profile-section animate-fade-up delay-1">
+    <div class="profile-section-header">
+      <div>
+        <p class="profile-section-eyebrow">Übersicht</p>
+        <h2 class="profile-section-title">Persönliche Informationen</h2>
+      </div>
+      {% if session.get('is_admin') or session.get('user_id') == emp.id %}
+      <div class="profile-actions">
+        <a href="{{ url_for('edit_employee', emp_id=emp.id) }}" class="btn btn-primary profile-edit-btn">
+          <span aria-hidden="true">✏️</span>
+          Daten bearbeiten
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="profile-info-grid">
+      <article class="profile-card">
+        <h3 class="profile-card-title">
+          <span class="profile-card-icon">📝</span>
+          Grunddaten
+        </h3>
+        <dl class="profile-data-list">
+          <div class="profile-data-item">
+            <dt>Name</dt>
+            <dd>{{ emp.name }}</dd>
           </div>
-          
-          <!-- Personalnummer -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">🔢</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Personalnummer</label>
-            </div>
-            <div style="padding: 0.5rem 0;">
+          <div class="profile-data-item">
+            <dt>Personalnummer</dt>
+            <dd>
               {% if emp.employee_number %}
-                <span class="badge" style="background-color: #64748b; font-size: 0.875rem; padding: 0.5rem 1rem;">{{ emp.employee_number }}</span>
+                <span class="profile-pill">{{ emp.employee_number }}</span>
               {% else %}
-                <span style="color: #9ca3af; font-style: italic;">Nicht angegeben</span>
+                <span class="profile-placeholder">Nicht angegeben</span>
               {% endif %}
-            </div>
+            </dd>
           </div>
-          
-          <!-- Kürzel -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">🏷️</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Kürzel</label>
-            </div>
-            <div style="padding: 0.5rem 0;">
+          <div class="profile-data-item">
+            <dt>Kürzel</dt>
+            <dd>
               {% if emp.short_code %}
-                <span class="badge" style="background-color: #3b82f6; font-size: 0.875rem; padding: 0.5rem 1rem;">{{ emp.short_code }}</span>
+                <span class="profile-pill profile-pill-blue">{{ emp.short_code }}</span>
               {% else %}
-                <span style="color: #9ca3af; font-style: italic;">Nicht angegeben</span>
+                <span class="profile-placeholder">Nicht angegeben</span>
               {% endif %}
-            </div>
+            </dd>
           </div>
-        </div>
-      </div>
-      
-      <!-- Organisation Karte -->
-      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 1.5rem;">
-        <h4 style="color: #374151; margin-bottom: 1.5rem; display: flex; align-items: center; font-size: 1.125rem; font-weight: 600;">
-          <span style="margin-right: 0.5rem; font-size: 1.25rem;">🏢</span>Organisation
-        </h4>
-        
-        <div style="space-y: 1.25rem;">
-          <!-- Abteilung -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">🏢</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Abteilung</label>
-            </div>
-            <div style="padding: 0.5rem 0;">
+        </dl>
+      </article>
+
+      <article class="profile-card">
+        <h3 class="profile-card-title">
+          <span class="profile-card-icon">🏢</span>
+          Organisation
+        </h3>
+        <dl class="profile-data-list">
+          <div class="profile-data-item">
+            <dt>Abteilung</dt>
+            <dd>
               {% if emp.department %}
-                <span style="color: #059669; font-weight: 600; font-size: 1.125rem;">{{ emp.department.name }}</span>
+                <span class="profile-highlight">{{ emp.department.name }}</span>
               {% else %}
-                <span style="color: #9ca3af; font-style: italic;">Keine Abteilung zugeordnet</span>
+                <span class="profile-placeholder">Keine Abteilung zugeordnet</span>
               {% endif %}
-            </div>
+            </dd>
           </div>
-          
-          <!-- Position -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">💼</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Position</label>
-            </div>
-            <p style="font-size: 1rem; color: #1e293b; margin: 0; padding: 0.5rem 0; font-weight: 500;">
-              {{ emp.position or 'Nicht angegeben' }}
-            </p>
+          <div class="profile-data-item">
+            <dt>Position</dt>
+            <dd>{{ emp.position or 'Nicht angegeben' }}</dd>
           </div>
-          
-          <!-- Monatliche Stunden -->
-          <div style="margin-bottom: 1.25rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-              <span style="margin-right: 0.5rem; font-size: 1.125rem;">⏰</span>
-              <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Monatliche Stunden</label>
-            </div>
-            <div style="padding: 0.5rem 0;">
+          <div class="profile-data-item">
+            <dt>Monatliche Stunden</dt>
+            <dd>
               {% if emp.monthly_hours %}
-                <span style="font-weight: 700; color: #059669; font-size: 1.25rem;">{{ emp.monthly_hours }}h</span>
-                <span style="color: #64748b; font-size: 0.875rem; margin-left: 0.5rem;">pro Monat</span>
+                <span class="profile-highlight">{{ emp.monthly_hours }} h</span>
+                <span class="profile-subtext">Durchschnitt pro Monat</span>
               {% else %}
-                <span style="color: #9ca3af; font-style: italic;">Nicht angegeben</span>
+                <span class="profile-placeholder">Nicht angegeben</span>
               {% endif %}
-            </div>
+            </dd>
           </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Kontaktdaten Karte -->
-    <div style="background: #fef7ff; border: 1px solid #e9d5ff; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 2rem;">
-      <h4 style="color: #374151; margin-bottom: 1.5rem; display: flex; align-items: center; font-size: 1.125rem; font-weight: 600;">
-        <span style="margin-right: 0.5rem; font-size: 1.25rem;">📞</span>Kontaktdaten
-      </h4>
-      
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
-        <!-- E-Mail -->
-        <div>
-          <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-            <span style="margin-right: 0.5rem; font-size: 1.125rem;">📧</span>
-            <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">E‑Mail</label>
-          </div>
-          <div style="padding: 0.5rem 0;">
-            {% if emp.email %}
-              <a href="mailto:{{ emp.email }}" style="color: #2563eb; text-decoration: none; font-weight: 500; font-size: 1rem;">{{ emp.email }}</a>
-            {% else %}
-              <span style="color: #9ca3af; font-style: italic;">Nicht angegeben</span>
-            {% endif %}
-          </div>
-        </div>
-        
-        <!-- Telefon -->
-        <div>
-          <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-            <span style="margin-right: 0.5rem; font-size: 1.125rem;">📱</span>
-            <label style="font-weight: 600; color: #64748b; font-size: 0.875rem;">Telefon</label>
-          </div>
-          <div style="padding: 0.5rem 0;">
-            {% if emp.phone %}
-              <a href="tel:{{ emp.phone }}" style="color: #2563eb; text-decoration: none; font-weight: 500; font-size: 1rem;">{{ emp.phone }}</a>
-            {% else %}
-              <span style="color: #9ca3af; font-style: italic;">Nicht angegeben</span>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Aktionen -->
-    {% if session.get('is_admin') or session.get('user_id') == emp.id %}
-    <div style="text-align: center; padding-top: 1rem;">
-      <a href="{{ url_for('edit_employee', emp_id=emp.id) }}" 
-         class="btn btn-primary" 
-         style="padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600; border-radius: 0.75rem; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.2s ease;">
-        <span style="margin-right: 0.5rem;">✏️</span>Daten bearbeiten
-      </a>
-    </div>
-    {% endif %}
-  </div>
-</div>
+        </dl>
+      </article>
 
-<!-- Schichten -->
-<div class="card" style="margin-bottom: 2rem;">
-  <div class="card-header">
-    <h3 style="margin: 0; display: flex; align-items: center; justify-content: space-between;">
-      <span>
-        <span style="margin-right: 0.75rem;">⏰</span>
-        Schichten der aktuellen Woche ({{ shifts|length }})
-      </span>
-      <small style="color: #64748b;">
-        Aktuelle Woche (Mo - So)
-      </small>
-    </h3>
-  </div>
-  <div class="card-body" style="padding: 0;">
+      <article class="profile-card">
+        <h3 class="profile-card-title">
+          <span class="profile-card-icon">📞</span>
+          Kontaktdaten
+        </h3>
+        <dl class="profile-data-list">
+          <div class="profile-data-item">
+            <dt>E‑Mail</dt>
+            <dd>
+              {% if emp.email %}
+                <a href="mailto:{{ emp.email }}" class="profile-link">{{ emp.email }}</a>
+              {% else %}
+                <span class="profile-placeholder">Nicht angegeben</span>
+              {% endif %}
+            </dd>
+          </div>
+          <div class="profile-data-item">
+            <dt>Telefon</dt>
+            <dd>
+              {% if emp.phone %}
+                <a href="tel:{{ emp.phone }}" class="profile-link">{{ emp.phone }}</a>
+              {% else %}
+                <span class="profile-placeholder">Nicht angegeben</span>
+              {% endif %}
+            </dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+  </section>
+
+  <section class="profile-section animate-fade-up delay-2">
+    <div class="profile-section-header">
+      <div>
+        <p class="profile-section-eyebrow">Aktuelle Woche</p>
+        <h2 class="profile-section-title">Schichten</h2>
+      </div>
+    </div>
     {% if shifts %}
-    <div style="overflow-x: auto;">
-      <table class="table" style="margin: 0;">
-        <thead>
-          <tr>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">📅</span>Datum
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">⏰</span>Stunden
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">🏷️</span>Typ
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">✅</span>Status
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in shifts %}
-          <tr>
-            <td style="padding: 1rem; font-weight: 500;">{{ s.date.strftime('%d.%m.%Y') }}</td>
-            <td style="padding: 1rem;">
-              <span style="font-weight: 600; color: #059669;">{{ '%.1f'|format(s.hours) }}h</span>
-            </td>
-            <td style="padding: 1rem;">
-              {% if s.shift_type %}
-                <span class="badge" style="background-color: #64748b;">{{ s.shift_type }}</span>
-              {% else %}
-                <span style="color: #9ca3af;">–</span>
-              {% endif %}
-            </td>
-            <td style="padding: 1rem;">
-              {% if s.approved %}
-                <span class="badge" style="background-color: #059669;">✅ Genehmigt</span>
-              {% else %}
-                <span class="badge" style="background-color: #d97706;">⏳ Ausstehend</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    
+      <div class="profile-table-wrapper">
+        <table class="table profile-table">
+          <thead>
+            <tr>
+              <th><span aria-hidden="true">📅</span> Datum</th>
+              <th><span aria-hidden="true">⏰</span> Stunden</th>
+              <th><span aria-hidden="true">🏷️</span> Typ</th>
+              <th><span aria-hidden="true">✅</span> Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in shifts %}
+            <tr>
+              <td data-label="Datum">{{ s.date.strftime('%d.%m.%Y') }}</td>
+              <td data-label="Stunden"><span class="profile-highlight">{{ '%.1f'|format(s.hours) }} h</span></td>
+              <td data-label="Typ">
+                {% if s.shift_type %}
+                  <span class="profile-pill">{{ s.shift_type }}</span>
+                {% else %}
+                  <span class="profile-placeholder">–</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if s.approved %}
+                  <span class="profile-status profile-status-success">✅ Genehmigt</span>
+                {% else %}
+                  <span class="profile-status profile-status-warning">⏳ Ausstehend</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
-    <div style="text-align: center; padding: 3rem 2rem; color: #64748b;">
-      <div style="font-size: 4rem; margin-bottom: 1rem;">⏰</div>
-      <h3 style="margin-bottom: 0.5rem;">Keine Schichten in dieser Woche</h3>
-      <p style="margin: 0;">Für die aktuelle Woche sind noch keine Schichten eingetragen.</p>
-    </div>
+      <div class="profile-empty-state">
+        <div class="profile-empty-icon" aria-hidden="true">⏰</div>
+        <h3>Keine Schichten in dieser Woche</h3>
+        <p>Für die aktuelle Woche sind noch keine Schichten eingetragen.</p>
+      </div>
     {% endif %}
-  </div>
-</div>
+  </section>
 
-<!-- Abwesenheiten -->
-<div class="card">
-  <div class="card-header">
-    <h3 style="margin: 0; display: flex; align-items: center;">
-      <span style="margin-right: 0.75rem;">🏖️</span>
-      Abwesenheiten ({{ leaves|length }})
-    </h3>
-  </div>
-  <div class="card-body" style="padding: 0;">
+  <section class="profile-section animate-fade-up delay-3">
+    <div class="profile-section-header">
+      <div>
+        <p class="profile-section-eyebrow">Planung</p>
+        <h2 class="profile-section-title">Abwesenheiten</h2>
+      </div>
+    </div>
     {% if leaves %}
-    <div style="overflow-x: auto;">
-      <table class="table" style="margin: 0;">
-        <thead>
-          <tr>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">📅</span>Zeitraum
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">🏷️</span>Typ
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">✅</span>Status
-            </th>
-            <th style="padding: 1.5rem 1rem;">
-              <span style="margin-right: 0.5rem;">📝</span>Notizen
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for l in leaves %}
-          <tr>
-            <td style="padding: 1rem; font-weight: 500;">
-              {{ l.start_date.strftime('%d.%m.%Y') }} – {{ l.end_date.strftime('%d.%m.%Y') }}
-            </td>
-            <td style="padding: 1rem;">
-              <span class="badge" style="background-color: #3b82f6;">{{ l.leave_type }}</span>
-            </td>
-            <td style="padding: 1rem;">
-              {% if l.approved %}
-                <span class="badge" style="background-color: #059669;">✅ Genehmigt</span>
-              {% else %}
-                <span class="badge" style="background-color: #d97706;">⏳ Ausstehend</span>
-              {% endif %}
-            </td>
-            <td style="padding: 1rem;">
-              {% if l.notes %}
-                <span style="color: #64748b; font-style: italic;">{{ l.notes }}</span>
-              {% else %}
-                <span style="color: #9ca3af;">–</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+      <div class="profile-table-wrapper">
+        <table class="table profile-table">
+          <thead>
+            <tr>
+              <th><span aria-hidden="true">📅</span> Zeitraum</th>
+              <th><span aria-hidden="true">🏷️</span> Typ</th>
+              <th><span aria-hidden="true">✅</span> Status</th>
+              <th><span aria-hidden="true">📝</span> Notizen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in leaves %}
+            <tr>
+              <td data-label="Zeitraum">{{ l.start_date.strftime('%d.%m.%Y') }} – {{ l.end_date.strftime('%d.%m.%Y') }}</td>
+              <td data-label="Typ"><span class="profile-pill profile-pill-blue">{{ l.leave_type }}</span></td>
+              <td data-label="Status">
+                {% if l.approved %}
+                  <span class="profile-status profile-status-success">✅ Genehmigt</span>
+                {% else %}
+                  <span class="profile-status profile-status-warning">⏳ Ausstehend</span>
+                {% endif %}
+              </td>
+              <td data-label="Notizen">
+                {% if l.notes %}
+                  <span class="profile-notes">{{ l.notes }}</span>
+                {% else %}
+                  <span class="profile-placeholder">–</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     {% else %}
-    <div style="text-align: center; padding: 3rem 2rem; color: #64748b;">
-      <div style="font-size: 4rem; margin-bottom: 1rem;">🏖️</div>
-      <h3 style="margin-bottom: 0.5rem;">Keine Abwesenheiten</h3>
-      <p style="margin: 0;">Für diesen Mitarbeiter sind noch keine Abwesenheiten eingetragen.</p>
-    </div>
+      <div class="profile-empty-state">
+        <div class="profile-empty-icon" aria-hidden="true">🏖️</div>
+        <h3>Keine Abwesenheiten</h3>
+        <p>Für diesen Mitarbeiter sind noch keine Abwesenheiten eingetragen.</p>
+      </div>
     {% endif %}
-  </div>
+  </section>
 </div>
 {% endblock %}
-
