@@ -92,6 +92,12 @@ class Employee(db.Model):
             return False
         return check_password_hash(self.password_hash, password)
 
+    @property
+    def is_temp_worker(self) -> bool:
+        """Gibt zurück, ob der Mitarbeiter als Aushilfe geführt wird."""
+
+        return (self.position or "").strip().lower() == "aushilfe"
+
     def __repr__(self) -> str:
         return f"<Employee {self.name}>"
 
