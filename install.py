@@ -1,52 +1,93 @@
+from __future__ import annotations
 
 import subprocess
 import sys
-import os
+from pathlib import Path
 
-def install_requirements():
-    """Installiert Python-Pakete aus der requirements.txt Datei."""
-    requirements_file = os.path.join(os.path.dirname(__file__), "requirements.txt")
+BASE_DIR = Path(__file__).resolve().parent
+REQUIREMENTS_FILE = BASE_DIR / "requirements.txt"
+MIN_PYTHON = (3, 9)
 
-    if not os.path.exists(requirements_file):
-        print(f"Fehler: Die Datei '{requirements_file}' wurde nicht gefunden.")
-        print("Bitte stellen Sie sicher, dass 'requirements.txt' im selben Verzeichnis wie 'install.py' liegt.")
-        sys.exit(1)
 
-    print(f"Installiere Pakete aus {requirements_file}...")
-    try:
-        # Führe pip install -r requirements.txt aus
-        process = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-r", requirements_file],
-            check=True,  # Wirft eine Ausnahme bei Fehlern
-            capture_output=True, # Erfasst stdout und stderr
-            text=True # Dekodiert stdout/stderr als Text
+def check_python_version() -> None:
+    """Stellt sicher, dass eine unterstützte Python-Version verwendet wird."""
+    if sys.version_info < MIN_PYTHON:
+        version = ".".join(map(str, sys.version_info[:3]))
+        required = ".".join(map(str, MIN_PYTHON))
+        print(
+            f"❌ Python {version} wird nicht unterstützt. Bitte verwenden Sie mindestens Version {required}."
         )
-        print("\nInstallation erfolgreich abgeschlossen!")
-        print("\nAusgabe von pip:")
-        print(process.stdout)
-        if process.stderr:
-            print("\nFehler/Warnungen von pip:")
-            print(process.stderr)
-
-    except subprocess.CalledProcessError as e:
-        print(f"\nFehler bei der Installation der Pakete: {e}")
-        print(f"Befehl: {e.cmd}")
-        print(f"Statuscode: {e.returncode}")
-        print(f"Standardausgabe: {e.stdout}")
-        print(f"Fehlerausgabe: {e.stderr}")
-        sys.exit(1)
-    except FileNotFoundError:
-        print("Fehler: 'pip' Befehl nicht gefunden. Stellen Sie sicher, dass Python und pip installiert und im PATH sind.")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
         sys.exit(1)
 
-def main():
-    print("Starte die Installation der Projekt-Abhängigkeiten...")
-    install_requirements()
-    print("\nDie Installation ist abgeschlossen. Sie können nun Ihr Projekt starten.")
+
+def ensure_requirements_file() -> None:
+    """Prüft, ob die requirements.txt verfügbar ist."""
+    if not REQUIREMENTS_FILE.exists():
+        print(
+            f"❌ Die Datei '{REQUIREMENTS_FILE}' wurde nicht gefunden. "
+            "Bitte stellen Sie sicher, dass das Script im Projektverzeichnis ausgeführt wird."
+        )
+        sys.exit(1)
+
+
+def run_step(description: str, command: list[str]) -> None:
+    """Führt einen Shell-Befehl aus und beendet das Script bei Fehlern."""
+    print(f"\n➡️  {description}")
+    print(f"   Befehl: {' '.join(command)}")
+    try:
+        subprocess.run(command, cwd=BASE_DIR, check=True)
+        print("   ✅ Erfolgreich abgeschlossen")
+    except subprocess.CalledProcessError as exc:
+        print(
+            f"   ❌ Fehler beim Ausführen des Befehls (Exitcode {exc.returncode})."
+        )
+        sys.exit(exc.returncode or 1)
+
+
+def install_python_packages() -> None:
+    """Installiert alle Python-Abhängigkeiten."""
+    python_executable = sys.executable
+
+    run_step(
+        "Aktualisiere pip, setuptools und wheel",
+        [python_executable, "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"],
+    )
+
+    run_step(
+        "Installiere Projekt-Abhängigkeiten",
+        [python_executable, "-m", "pip", "install", "-r", str(REQUIREMENTS_FILE)],
+    )
+
+
+def initialize_database() -> None:
+    """Initialisiert die Datenbank und führt notwendige Migrationen aus."""
+    python_executable = sys.executable
+
+    run_step(
+        "Initialisiere Datenbank (Standardwerte & Admin-Benutzer)",
+        [python_executable, "init_db.py"],
+    )
+
+    migrate_script = BASE_DIR / "migrate_db.py"
+    if migrate_script.exists():
+        run_step(
+            "Führe optionale Datenbank-Migrationen aus",
+            [python_executable, str(migrate_script)],
+        )
+
+
+def main() -> None:
+    print("🏗️  Starte vollständige Installation des Employee Planner Projekts")
+    check_python_version()
+    ensure_requirements_file()
+    install_python_packages()
+    initialize_database()
+
+    print("\n🎉 Installation abgeschlossen!")
+    print("Sie können den Server jetzt direkt mit folgendem Befehl starten:")
+    print(f"   {sys.executable} start_server.py")
+    print("\nAlternativ können Sie den Server auch direkt mit 'python app.py' starten.")
+
 
 if __name__ == "__main__":
     main()
-
