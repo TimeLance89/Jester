@@ -755,54 +755,40 @@ def create_app() -> Flask:
             flash("Sie können nur Ihre eigenen Daten bearbeiten.", "danger")
             return redirect(url_for("index"))
         if request.method == "POST":
-            is_temp_worker = emp.position == "Aushilfe"
-
-            # Kontaktinformationen dürfen immer geändert werden
+            name = request.form.get("name", "").strip()
+            emp_number = request.form.get("employee_number", "").strip() or None
+            dept_id = request.form.get("department_id") or None
+            dept_id = int(dept_id) if dept_id else None
+            monthly_hours = request.form.get("monthly_hours") or None
+            monthly_hours = float(monthly_hours) if monthly_hours else None
             email = request.form.get("email", "").strip() or None
             phone = request.form.get("phone", "").strip() or None
+            position = request.form.get("position", "").strip() or None
+            short_code = request.form.get("short_code", "").strip() or None
+            username = request.form.get("username", "").strip() or None
+            password = request.form.get("password", "")
+            is_admin_flag = bool(request.form.get("is_admin"))
+            emp.name = name or emp.name
+            emp.employee_number = emp_number
+            emp.department_id = dept_id
+            emp.monthly_hours = monthly_hours
             emp.email = email
             emp.phone = phone
-
-            if not is_temp_worker:
-                name = request.form.get("name", "").strip()
-                emp.name = name or emp.name
-
-                emp_number = request.form.get("employee_number", "").strip() or None
-                emp.employee_number = emp_number
-
-                dept_id = request.form.get("department_id") or None
-                dept_id = int(dept_id) if dept_id else None
-                emp.department_id = dept_id
-
-                monthly_hours = request.form.get("monthly_hours") or None
-                monthly_hours = float(monthly_hours) if monthly_hours else None
-                emp.monthly_hours = monthly_hours
-
-                position = request.form.get("position", "").strip() or None
-                emp.position = position
-
-                short_code = request.form.get("short_code", "").strip() or None
-                emp.short_code = short_code
-
-                default_daily_hours = request.form.get("default_daily_hours") or None
-                default_daily_hours = (
-                    float(default_daily_hours) if default_daily_hours else None
-                )
-                emp.default_daily_hours = default_daily_hours
-
-                work_days = request.form.getlist("work_days")
-                emp.default_work_days = ",".join(work_days) if work_days else None
-
-                if session.get("is_admin"):
-                    is_admin_flag = bool(request.form.get("is_admin"))
-                    emp.is_admin = is_admin_flag
-
-                username = request.form.get("username", "").strip() or None
-                if username:
-                    emp.username = username
-
-            # Passwort darf unabhängig von der Rolle gesetzt werden
-            password = request.form.get("password", "")
+            emp.position = position
+            emp.short_code = short_code
+            
+            # Standard-Arbeitszeiten verarbeiten
+            default_daily_hours = request.form.get("default_daily_hours") or None
+            default_daily_hours = float(default_daily_hours) if default_daily_hours else None
+            emp.default_daily_hours = default_daily_hours
+            
+            work_days = request.form.getlist("work_days")
+            emp.default_work_days = ",".join(work_days) if work_days else None
+            
+            if session.get("is_admin"):
+                emp.is_admin = is_admin_flag
+            if username:
+                emp.username = username
             if password:
                 emp.set_password(password)
             db.session.commit()
