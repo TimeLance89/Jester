@@ -3,76 +3,125 @@
 {% block content %}
 
 <div class="container-fluid px-3">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h2 style="margin: 0;">Dienstplan für {{ month }}.{{ year }}</h2>
-    <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addShiftModal">
-      ➕ Einsatz hinzufügen
-    </button>
-  </div>
+  <div class="schedule-wrapper">
+    <section class="schedule-hero">
+      <div class="schedule-hero-header">
+        <div>
+          <h1 class="schedule-hero-title">Dienstplan</h1>
+          <p class="schedule-hero-subtitle">Übersicht für {{ calendar.month_name[month] }} {{ year }}</p>
+        </div>
+        <div class="schedule-hero-actions">
+          <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addShiftModal">
+            ➕ Einsatz hinzufügen
+          </button>
+        </div>
+      </div>
+      <div class="schedule-hero-highlights">
+        <div class="schedule-highlight">
+          <span class="highlight-label">Gesamtteile</span>
+          <span class="highlight-value">{{ productivity_data_totals.get('teile', 0)|int }}</span>
+        </div>
+        <div class="schedule-highlight">
+          <span class="highlight-label">Gesamtstunden</span>
+          <span class="highlight-value">{{ productivity_data_totals.get('gesamt_std', 0)|round(1) }} h</span>
+        </div>
+        <div class="schedule-highlight">
+          <span class="highlight-label">Produktivität</span>
+          <span class="highlight-value">{{ productivity_data_totals.get('durchschnittliche_produktivitaet', 0)|round(2) }}</span>
+        </div>
+      </div>
+    </section>
 
-  <form method="get" class="row g-3 mb-4">
-    <div class="col-auto">
-      <label class="form-label" for="month">Monat</label>
-      <select class="form-select" id="month" name="month">
-        {% for m in range(1, 13) %}
-        <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
-        {% endfor %}
-      </select>
+    <div class="card schedule-filter-card">
+      <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label" for="month">Monat</label>
+            <select class="form-select" id="month" name="month">
+              {% for m in range(1, 13) %}
+              <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="year">Jahr</label>
+            <select class="form-select" id="year" name="year">
+              {% for y in range(2020, 2030) %}
+              <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="department">Abteilung</label>
+            <select class="form-select" id="department" name="department">
+              <option value="">Alle</option>
+              {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if dept.id == selected_department %}selected{% endif %}>{{ dept.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100">Aktualisieren</button>
+            {% if current_user and current_user.is_admin and not current_user.department_id %}
+            <button type="button" class="btn btn-outline-secondary w-100" id="reorderGroupsBtn">
+              ⇅ Gruppen
+            </button>
+            {% endif %}
+          </div>
+        </form>
+      </div>
     </div>
-    <div class="col-auto">
-      <label class="form-label" for="year">Jahr</label>
-      <select class="form-select" id="year" name="year">
-        {% for y in range(2020, 2030) %}
-        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-auto">
-      <label class="form-label" for="department">Abteilung</label>
-      <select class="form-select" id="department" name="department">
-        <option value="">Alle</option>
-        {% for dept in departments %}
-        <option value="{{ dept.id }}" {% if dept.id == selected_department %}selected{% endif %}>{{ dept.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-auto d-flex align-items-end">
-      <button type="submit" class="btn btn-primary">Aktualisieren</button>
-    </div>
-    {% if current_user and current_user.is_admin and not current_user.department_id %}
-    <div class="col-auto d-flex align-items-end">
-      <button type="button" class="btn btn-secondary" id="reorderGroupsBtn">
-        <span>⇅</span> Gruppen sortieren
-      </button>
-    </div>
-    {% endif %}
-  </form>
 
-  <!-- Desktop Layout: Normale Tabelle (≥1200px) -->
-  <div class="desktop-schedule d-none d-xl-block">
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead class="table-primary">
+    <div class="schedule-legend card">
+      <div class="card-body">
+        <div class="legend-items">
+          <div class="legend-item">
+            <span class="schedule-marker schedule-marker-blocked">🚫</span>
+            <span>Gesperrter Tag</span>
+          </div>
+          <div class="legend-item">
+            <span class="schedule-badge schedule-badge-urlaub">UR</span>
+            <span>Urlaub</span>
+          </div>
+          <div class="legend-item">
+            <span class="schedule-badge schedule-badge-krank">KR</span>
+            <span>Krankheit</span>
+          </div>
+          <div class="legend-item">
+            <span class="schedule-pill">8h</span>
+            <span>Genehmigter Einsatz</span>
+          </div>
+          <div class="legend-item">
+            <span class="schedule-pill schedule-pill-pending">"8h"</span>
+            <span>Offener Einsatz</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Layout: Normale Tabelle (≥1200px) -->
+    <div class="desktop-schedule d-none d-xl-block">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm schedule-table">
+        <thead class="schedule-table-head">
           <tr>
-            <th rowspan="2" class="text-center align-middle" style="min-width: 120px;">MITARBEITER</th>
+            <th rowspan="2" class="schedule-table-header text-center align-middle">Mitarbeiter</th>
             {% for day in month_days %}
-            <th class="text-center" style="min-width: 35px; font-size: 0.75rem;">
-              {{ day.day }}
-              {% set day_data = productivity_data.get(day, {}) %}
+            {% set day_data = productivity_data.get(day, {}) %}
+            {% set is_weekend = day.weekday() in [5, 6] %}
+            <th class="schedule-day-header {% if is_weekend %}is-weekend{% endif %}">
+              <span class="day-number">{{ day.day }}</span>
               {% if day_data.get("teile", 0) > 0 %}
-              <br><small class="productivity-info" 
-                       title="Berechnung für {{ day.strftime('%d.%m.%Y') }}:&#10;Std Aushilfen + ZA: {{ day_data.get('aushilfen_za_std', 0) }}h&#10;Std Feste: {{ day_data.get('feste_std', 0) }}h&#10;Gesamt: {{ day_data.get('gesamt_std', 0) }}h&#10;Produktivität: {{ day_data.get('produktivitaet', 0) }}&#10;Teile: {{ day_data.get('gesamt_std', 0) }} × {{ day_data.get('produktivitaet', 0) }} = {{ day_data.get('teile', 0) }}"
-                       style="color: #dc2626; font-weight: bold; cursor: help;">
-                ({{ day_data.get("teile", 0)|int }})
-              </small>
+              <span class="day-productivity" title="Berechnung für {{ day.strftime('%d.%m.%Y') }}:&#10;Std Aushilfen + ZA: {{ day_data.get('aushilfen_za_std', 0) }}h&#10;Std Feste: {{ day_data.get('feste_std', 0) }}h&#10;Gesamt: {{ day_data.get('gesamt_std', 0) }}h&#10;Produktivität: {{ day_data.get('produktivitaet', 0) }}&#10;Teile: {{ day_data.get('gesamt_std', 0) }} × {{ day_data.get('produktivitaet', 0) }} = {{ day_data.get('teile', 0) }}">({{ day_data.get("teile", 0)|int }})</span>
               {% endif %}
             </th>
             {% endfor %}
-            <th rowspan="2" class="text-center align-middle" style="min-width: 60px;">Σ</th>
+            <th rowspan="2" class="schedule-table-header text-center align-middle">Σ</th>
           </tr>
           <tr>
             {% for day in month_days %}
-            <th class="text-center" style="font-size: 0.6rem;">{{ ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][day.weekday()] }}</th>
+            {% set is_weekend = day.weekday() in [5, 6] %}
+            <th class="schedule-weekday {% if is_weekend %}is-weekend{% endif %}">{{ ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][day.weekday()] }}</th>
             {% endfor %}
           </tr>
         </thead>
@@ -85,61 +134,59 @@
           {% for group_name in ordered_group_names %}
             {% set group_employees = employee_groups.get(group_name, []) %}
             {% if group_employees %}
-          <tr>
-            <td colspan="{{ month_days|length + 1 }}" class="text-center fw-bold" style="background-color: {{ group_colors[group_name] }}; color: white; padding: 0.5rem;">
-              {{ group_icons[group_name] }} {{ group_name|upper }} MITARBEITER ({{ group_employees|length }})
+          <tr class="schedule-group-row">
+            <td colspan="{{ month_days|length + 1 }}" class="schedule-group-header" style="background-color: {{ group_colors[group_name] }};">
+              <span class="group-icon">{{ group_icons[group_name] }}</span>
+              <span class="group-label">{{ group_name|upper }} Mitarbeiter</span>
+              <span class="group-count">{{ group_employees|length }}</span>
             </td>
           </tr>
               {% for emp in group_employees %}
-          <tr>
-            <td class="fw-bold" style="background-color: {{ group_bg_colors[group_name] }};">
-              <a href="{{ url_for('employee_profile', emp_id=emp.id) }}" class="text-decoration-none">{{ emp.name }}</a>
+          <tr class="schedule-row">
+            <td class="schedule-employee" style="background-color: {{ group_bg_colors[group_name] }};">
+              <a href="{{ url_for('employee_profile', emp_id=emp.id) }}" class="employee-link">{{ emp.name }}</a>
             </td>
             {% for day in month_days %}
             {% set leave = leaves.get((emp.id, day)) %}
             {% set shift = shifts.get((emp.id, day)) %}
             {% set blocked_day = blocked_days.get(day) %}
-            <td class="text-center p-1" style="font-size: 0.7rem; {% if blocked_day %}background-color: #fee2e2;{% endif %}">
+            {% set is_weekend = day.weekday() in [5, 6] %}
+            <td class="schedule-cell {% if is_weekend %}is-weekend{% endif %} {% if blocked_day %}is-blocked{% endif %}">
               {% if blocked_day %}
-                <div class="badge" style="background-color: #dc2626; color: white; font-size: 0.6rem;" 
-                     title="{{ blocked_day.name }}{% if blocked_day.description %} - {{ blocked_day.description }}{% endif %}">
-                  🚫
-                </div>
+                <span class="schedule-marker schedule-marker-blocked" title="{{ blocked_day.name }}{% if blocked_day.description %} - {{ blocked_day.description }}{% endif %}">🚫</span>
               {% elif leave %}
+                {% set leave_prefix = leave.leave_type[:2] %}
                 {% if leave.leave_type == 'Urlaub' %}
-                  <div class="badge position-relative" style="background-color: orange; color: green;">
-                    {{ leave.leave_type[:2] }}
-                    <button type="button" class="btn-close btn-close-sm position-absolute top-0 start-100 translate-middle" 
-                            onclick="deleteLeave({{ leave.id }})" style="font-size: 0.5rem;"></button>
-                  </div>
+                  <span class="schedule-badge schedule-badge-urlaub" title="{{ leave.leave_type }}">
+                    {{ leave_prefix }}
+                    <button type="button" class="btn-close btn-close-sm" onclick="deleteLeave({{ leave.id }})"></button>
+                  </span>
                 {% elif leave.leave_type == 'Krank' %}
-                  <div class="badge position-relative" style="background-color: red; color: white;">
-                    {{ leave.leave_type[:2] }}
-                    <button type="button" class="btn-close btn-close-sm position-absolute top-0 start-100 translate-middle" 
-                            onclick="deleteLeave({{ leave.id }})" style="font-size: 0.5rem;"></button>
-                  </div>
+                  <span class="schedule-badge schedule-badge-krank" title="{{ leave.leave_type }}">
+                    {{ leave_prefix }}
+                    <button type="button" class="btn-close btn-close-sm" onclick="deleteLeave({{ leave.id }})"></button>
+                  </span>
                 {% else %}
-                  <div class="badge bg-warning text-dark position-relative">
-                    {{ leave.leave_type[:2] }}
-                    <button type="button" class="btn-close btn-close-sm position-absolute top-0 start-100 translate-middle" 
-                            onclick="deleteLeave({{ leave.id }})" style="font-size: 0.5rem;"></button>
-                  </div>
+                  <span class="schedule-badge schedule-badge-generic" title="{{ leave.leave_type }}">
+                    {{ leave_prefix }}
+                    <button type="button" class="btn-close btn-close-sm" onclick="deleteLeave({{ leave.id }})"></button>
+                  </span>
                 {% endif %}
               {% elif shift %}
-                <div class="badge bg-success position-relative" style="color: #000 !important;">
+                <span class="schedule-pill {% if not shift.approved %}schedule-pill-pending{% endif %}" title="{{ shift.shift_type or 'Standard' }}">
                   {% if shift.approved %}{{ shift.hours }}h{% else %}"{{ shift.hours }}h"{% endif %}
-                  {% if shift.shift_type and not shift.shift_type.startswith('Standard') %}<br><small style="color: #000 !important;">{{ shift.shift_type[:3] }}</small>{% endif %}
-                  <button type="button" class="btn-close btn-close-sm position-absolute top-0 start-100 translate-middle" 
-                          onclick="deleteShift({{ shift.id }})" style="font-size: 0.5rem;"></button>
-                </div>
+                  {% if shift.shift_type and not shift.shift_type.startswith('Standard') %}
+                    <small>{{ shift.shift_type[:3] }}</small>
+                  {% endif %}
+                  <button type="button" class="btn-close btn-close-sm" onclick="deleteShift({{ shift.id }})"></button>
+                </span>
               {% endif %}
             </td>
             {% endfor %}
-            <td class="text-center fw-bold" style="background-color: {{ group_total_bg[group_name] }};">
-              {% if group_name == 'Vollzeit' and emp.monthly_hours and emp.monthly_hours >= 160 %}
-                {{ employee_totals.get(emp.id, 0) }}h (Vollzeit)
-              {% else %}
-                {{ employee_totals.get(emp.id, 0) }} / {{ emp.monthly_hours or 0 }}
+            <td class="schedule-total" style="background-color: {{ group_total_bg[group_name] }};">
+              <span class="total-value">{{ employee_totals.get(emp.id, 0) }}{% if group_name == 'Vollzeit' and emp.monthly_hours and emp.monthly_hours >= 160 %}h{% endif %}</span>
+              {% if not (group_name == 'Vollzeit' and emp.monthly_hours and emp.monthly_hours >= 160) %}
+              <span class="total-target">/ {{ emp.monthly_hours or 0 }}</span>
               {% endif %}
             </td>
           </tr>
@@ -200,36 +247,30 @@
                     {% for emp in group_employees %}
                 <tr>
                   <td class="fw-bold" style="background-color: {{ group_bg_colors[group_name] }};">
-                    <a href="{{ url_for('employee_profile', emp_id=emp.id) }}" class="text-decoration-none">{{ emp.name }}</a>
+                    <a href="{{ url_for('employee_profile', emp_id=emp.id) }}" class="employee-link">{{ emp.name }}</a>
                   </td>
                   {% for day in week %}
                   {% set leave = leaves.get((emp.id, day)) %}
                   {% set shift = shifts.get((emp.id, day)) %}
                   {% set blocked_day = blocked_days.get(day) %}
-                  <td class="text-center p-1" style="font-size: 0.7rem; {% if blocked_day %}background-color: #fee2e2;{% endif %}">
+                  {% set is_weekend = day.weekday() in [5, 6] %}
+                  <td class="schedule-cell {% if is_weekend %}is-weekend{% endif %} {% if blocked_day %}is-blocked{% endif %}">
                     {% if blocked_day %}
-                      <div class="badge" style="background-color: #dc2626; color: white; font-size: 0.6rem;" 
-                           title="{{ blocked_day.name }}{% if blocked_day.description %} - {{ blocked_day.description }}{% endif %}">
-                        🚫
-                      </div>
+                      <span class="schedule-marker schedule-marker-blocked"
+                            title="{{ blocked_day.name }}{% if blocked_day.description %} - {{ blocked_day.description }}{% endif %}">🚫</span>
                     {% elif leave %}
+                      {% set leave_prefix = leave.leave_type[:2] %}
                       {% if leave.leave_type == 'Urlaub' %}
-                        <div class="badge mt-1 position-relative" style="background-color: orange; color: green;">
-                          {{ leave.leave_type[:2] }}
-                        </div>
+                        <span class="schedule-badge schedule-badge-urlaub">{{ leave_prefix }}</span>
                       {% elif leave.leave_type == 'Krank' %}
-                        <div class="badge mt-1 position-relative" style="background-color: red; color: white;">
-                          {{ leave.leave_type[:2] }}
-                        </div>
+                        <span class="schedule-badge schedule-badge-krank">{{ leave_prefix }}</span>
                       {% else %}
-                        <div class="badge bg-warning text-dark mt-1 position-relative">
-                          {{ leave.leave_type[:2] }}
-                        </div>
+                        <span class="schedule-badge schedule-badge-generic">{{ leave_prefix }}</span>
                       {% endif %}
                     {% elif shift %}
-                      <div class="badge bg-success position-relative" style="color: #000 !important;">
+                      <span class="schedule-pill {% if not shift.approved %}schedule-pill-pending{% endif %}">
                         {% if shift.approved %}{{ shift.hours }}h{% else %}"{{ shift.hours }}h"{% endif %}
-                      </div>
+                      </span>
                     {% endif %}
                   </td>
                   {% endfor %}
@@ -244,6 +285,7 @@
       </div>
     {% endfor %}
   </div>
+</div>
 </div>
 
 <!-- Modal für Einsatz hinzufügen -->
